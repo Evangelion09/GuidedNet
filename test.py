@@ -17,11 +17,6 @@ os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
 os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
 
-# def change_data_format(train_data):
-#     datashape = train_data.shape
-#     train_data = np.transpose(train_data, [0, 3, 1, 2])
-#     train_data = np.reshape(train_data, [datashape[0], datashape[3], datashape[1], datashape[2], 1])
-#     return train_data
 
 def get_edge(data):
     rs = np.zeros_like(data)
@@ -49,10 +44,7 @@ def get_batch(gt, rgb_hp, ms):
 def get_all_data(datastr):
     train_data_name = datastr  # training data
     train_data = h5py.File(train_data_name, mode='r')  # 读取mat文件
-    # 花费时间
-    # 28.547181844711304
-    # 2.589353322982788
-    # 0.0
+
     gt = train_data['gt'][...]  ## ground truth N*H*W*C
     rgb = train_data['rgb'][...]  #### Pan image N*H*W
     ms = train_data['ms'][...]  ### low resolution MS image
@@ -62,14 +54,10 @@ def get_all_data(datastr):
     rgb = np.array(rgb, dtype=np.float32) / (2 ** 8 - 1)
     ms = np.array(ms, dtype=np.float32) / (2 ** 16 - 1)
     lms = np.array(lms, dtype=np.float32) / (2 ** 16 - 1)
-    # RGB 需要 高频信息
-    # rgb_hp = get_edge(rgb)
+
     rgb_hp = rgb
 
-    # gt = change_data_format(gt)
-    # rgb_hp = change_data_format(rgb_hp)
-    # ms = change_data_format(ms)
-    # lms = change_data_format(lms)
+
 
     return gt, rgb_hp, ms, lms
 
@@ -79,19 +67,10 @@ def HyNetSingleLevel(net_image, net_feature, rgbDownsample, reuse=False):
     with tf.variable_scope("Model_level", reuse=reuse):
         tl.layers.set_name_reuse(reuse)
         shapes = net_feature.outputs.shape
-        # (4 10 10 64)
-
-        # net_feature = ConcatLayer([net_feature, net_image], 3, name='concatimage_layer')
-        # net_feature = Conv2dLayer(net_feature, shape=[3, 3, 95, 64], strides=[1, 1, 1, 1],
-        #                           W_init=tf.contrib.layers.xavier_initializer(), name='conv2D95to64')
 
         net_feature = DeConv2dLayer(net_feature, shape=[6, 6, 64, 64], strides=[1, 2, 2, 1],
                                     output_shape=(shapes[0], shapes[1] * 2, shapes[2] * 2, 64),
                                     name='deconv_feature', W_init=tf.contrib.layers.xavier_initializer())
-        # net_feature = Conv2dLayer(net_feature,shape=[3,3,64,64*4],strides=[1,1,1,1],
-        #                 name='upconv_feature', W_init=tf.contrib.layers.xavier_initializer())
-        # net_feature = SubpixelConv2d(net_feature,scale=2,n_out_channel=64,
-        #                 name='subpixel_feature')
 
         concat_feature = ConcatLayer([net_feature, rgbDownsample], 3, name='concat_layer')
         # (4 20 20 67)
@@ -116,9 +95,6 @@ def HyNetSingleLevel(net_image, net_feature, rgbDownsample, reuse=False):
                                      W_init=tf.contrib.layers.xavier_initializer(), name='conv2Dget_gradient')
 
         imageshape = net_image.outputs.shape
-        # net_image = DeConv2dLayer(net_image, shape=[5, 5, 31, 31], strides=[1, 2, 2, 1],
-        #                             output_shape=(imageshape[0], imageshape[1] * 2, imageshape[2] * 2, 31),
-        #                             name='deconv_feature2', W_init=tf.contrib.layers.xavier_initializer())
 
         net_image = Conv2dLayer(net_image,shape=[3,3,31,31*4],strides=[1,1,1,1],
                         name='upconv_image', W_init=tf.contrib.layers.xavier_initializer())
@@ -154,14 +130,6 @@ def HyTestNet(inputs, rgb_image, is_train=False, reuse=False):
         rgbSample2 = Conv2dLayer(rgbSample1, shape=[6, 6, 3, 3], strides=[1, 2, 2, 1],
                                  W_init=tf.contrib.layers.xavier_initializer(), name='rgbdown2')
 
-        # rgbSample1 = DeConv2dLayer(rgbSample, shape=[6, 6, 3, 3], strides=[1, 2, 2, 1],
-        #                             output_shape=(shapes[0], shapes[1] * 2, shapes[2] * 2, 3),
-        #                             name='RGBde1', W_init=tf.contrib.layers.xavier_initializer())
-        # rgbSample2 = DeConv2dLayer(rgbSample1, shape=[6, 6, 3, 3], strides=[1, 2, 2, 1],
-        #                             output_shape=(shapes[0], shapes[1] * 4, shapes[2] * 4, 3),
-        #                             name='RGBde2', W_init=tf.contrib.layers.xavier_initializer())
-
-
         net_image = inputs_level
         # 2X for each level
         net_image1, net_feature1 = HyNetSingleLevel(net_image, net_feature, rgbSample2, reuse=reuse)
@@ -175,15 +143,12 @@ if __name__ == '__main__':
     batch_size = 32
     res_number=10
     cp=340000 #checkpoint
-    # test_data = '/home/office/桌面/Machine Learning/Ran Ran/data/rgbnet/test/test_10(no-hp8).mat'
+
     test_data = '/Data/Machine Learning/Ran Ran/data/rgbnet/test/test10CSR.mat'
-    # test_data = '/Data/Machine Learning/Ran Ran/data/rgbnet/test/testCSRH1.mat'
+
     dataname='output_01.mat'
 
     model_directory = './models/train_up67_leaky_res10_CSR_RGB124/'
-    # telement_number=1000
-    # model_directory1 = './models/train_up67_leaky_res10_CSR_RGB2/'  # directory to save trained model to.
-    # model_directory = './models/train_up67_leaky_res10_CSR_RGB2'  # directory to save trained model to.
 
     tf.reset_default_graph()
 
@@ -216,9 +181,7 @@ if __name__ == '__main__':
     output = tf.clip_by_value(net_image3.outputs, 0, 1)  # final output
     output1 = tf.clip_by_value(net_image2.outputs, 0, 1)  # final output
     output2 = tf.clip_by_value(net_image1.outputs, 0, 1)  # final output
-    # u11 = tf.clip_by_value(u1.outputs, 0, 1)  # final output
-    # u22 = tf.clip_by_value(u2.outputs, 0, 1)  # final output
-    # u33 = tf.clip_by_value(u3.outputs, 0, 1)  # final output
+
     init = tf.global_variables_initializer()
     saver = tf.train.Saver()
 
@@ -240,13 +203,7 @@ if __name__ == '__main__':
                           ckpt.model_checkpoint_path)  # this model uses 128 feature maps and for debug only
             print("load pre-trained model")
 
-        # print('ran')
-        # print(test_ms.shape)
-        # print(test_rgb_hp.shape)
-        # time_s = time.time()
-        # final_output = sess.run(output, feed_dict={testms: test_ms, testrgb: test_rgb_hp})
-        # time_e = time.time()
-        # print(time_e-time_s)
+
 
         print('ran')
         print(test_ms.shape)
@@ -265,18 +222,7 @@ if __name__ == '__main__':
             print(time_e - time_s)
             alltime=alltime+time_e - time_s
             final_output[i,:,:,:]=final_temp
-            # cv2.imshow('3', final_temp[0,20,:,:,0])
-            # print(np.mean(final_temp[0,20,:,:,0]))
-            # cv2.imshow('4', final_temp2[0, 20, :, :, 0])
-            # cv2.imshow('5', final_temp3[0, 20, :, :, 0])
-            # if i==7:
-            #     cv2.imshow('3', final_temp[0,:,:,20])
-            #     print(np.mean(final_temp[0,:,:,20]))
-            #     cv2.imshow('4', final_temp2[0, :, :, 20])
-            #     print(np.mean(final_temp2[0, :, :, 20]))
-            #     cv2.imshow('5', final_temp3[0, :, :, 20])
-            #     print(np.mean(final_temp3[0, :, :, 20]))
-            #     cv2.imshow('6',o1[0, :, :, 20])
+
             #     cv2.imshow('7', o2[0, :, :, 20])
             #     cv2.imshow('8', o3[0, :, :, 20])
             #
