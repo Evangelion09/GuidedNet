@@ -10,7 +10,8 @@ Tensorflow 1.15.2
 TensorLayer 1.8.0rc
 
 # Demo
-HSRnet.py for training code, and test.py for testing code
+main_train.py for training code, and 
+test.py for testing code
 
 # Test Data
 Test data include，
