@@ -23,3 +23,15 @@ Cave: https://pan.baidu.com/s/1Grc3K0dp9N8oFfqUDPYTGQ?pwd=7833 code：7833
 
 
 Harvard: https://pan.baidu.com/s/18tGPamlNz20cPPq3TvyyAw?pwd=4rly  code：4rly 
+
+
+# Reference
+@ARTICLE{10035506,
+  author={Ran, Ran and Deng, Liang-Jian and Jiang, Tai-Xiang and Hu, Jin-Fan and Chanussot, Jocelyn and Vivone, Gemine},
+  journal={IEEE Transactions on Cybernetics},
+  title={GuidedNet: A General CNN Fusion Framework via High-Resolution Guidance for Hyperspectral Image Super-Resolution},
+  year={2023},
+  volume={},
+  number={},
+  pages={1-14},
+  doi={10.1109/TCYB.2023.3238200}}
