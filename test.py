@@ -62,7 +62,6 @@ def get_all_data(datastr):
     return gt, rgb_hp, ms, lms
 
 
-
 def HyNetSingleLevel(net_image, net_feature, rgbDownsample, reuse=False):
     with tf.variable_scope("Model_level", reuse=reuse):
         tl.layers.set_name_reuse(reuse)
@@ -73,22 +72,20 @@ def HyNetSingleLevel(net_image, net_feature, rgbDownsample, reuse=False):
                                     name='deconv_feature', W_init=tf.contrib.layers.xavier_initializer())
 
         concat_feature = ConcatLayer([net_feature, rgbDownsample], 3, name='concat_layer')
-        # (4 20 20 67)
+
         net_feature = Conv2dLayer(concat_feature, shape=[3, 3, 67, 67], strides=[1, 1, 1, 1],
                                   W_init=tf.contrib.layers.xavier_initializer(), name='conv2D67')
         net_feature = Conv2dLayer(net_feature, shape=[3, 3, 67, 64], strides=[1, 1, 1, 1],
                                   W_init=tf.contrib.layers.xavier_initializer(), name='conv2Dto64')
 
         for d in range(res_number):
-            # net_tmp=PReluLayer(net_feature,name='prelu'+str(d))
+
             net_tmp=InputLayer(tl.activation.leaky_relu(net_feature.outputs),name='actinput'+str(d))
             net_tmp = Conv2dLayer(net_tmp, shape=[3, 3, 64, 64], strides=[1, 1, 1, 1],
                                   W_init=tf.contrib.layers.xavier_initializer(), name='conv2D1' + str(d))
-            # net_tmp = Conv2dLayer(net_tmp, shape=[3, 3, 64, 64], strides=[1, 1, 1, 1],
-            #                       W_init=tf.contrib.layers.xavier_initializer(), name='conv2D2' + str(d))
+
             net_feature = ElementwiseLayer([net_tmp, net_feature], combine_fn=tf.add, name='add_temp' + str(d))
-        # net_feature = ElementwiseLayer([concat_feature, net_featuretemp], combine_fn=tf.add,
-        #                                name='add_feature1')
+
 
         # 残差
         gradient_level = Conv2dLayer(net_feature, shape=[3, 3, 64, 31], strides=[1, 1, 1, 1],
@@ -101,11 +98,8 @@ def HyNetSingleLevel(net_image, net_feature, rgbDownsample, reuse=False):
         net_image = SubpixelConv2d(net_image,scale=2,n_out_channel=31,
                         name='subpixel_image')
 
-        # net_image = UpSampling2dLayer(net_image, size=(2, 2), method=2)
-        # 与残差相加
+
         net_image = ElementwiseLayer([gradient_level, net_image], combine_fn=tf.add, name='add_image')
-        # net_image = Conv2dLayer(net_image, shape=[3, 3, 31, 31], strides=[1, 1, 1, 1],
-        #                              W_init=tf.contrib.layers.xavier_initializer(), name='conv2net_image')
 
     return net_image, net_feature
 
@@ -115,7 +109,7 @@ def HyTestNet(inputs, rgb_image, is_train=False, reuse=False):
         tl.layers.set_name_reuse(reuse)
 
         shapes = tf.shape(rgb_image)
-        # inshapes = tf.shape(inputs)
+
         inputs_level = InputLayer(inputs, name='input_level')
 
         net_feature = Conv2dLayer(inputs_level, shape=[3, 3, 31, 64], strides=[1, 1, 1, 1],
@@ -124,11 +118,12 @@ def HyTestNet(inputs, rgb_image, is_train=False, reuse=False):
                                   W_init=tf.contrib.layers.xavier_initializer(), name='init_conv2')
         # (4 10 10 64)
         rgbSample = InputLayer(rgb_image, name='rgb_level')
-        # shapes = tf.shape(rgbSample)
+
         rgbSample1 = Conv2dLayer(rgbSample, shape=[6, 6, 3, 3], strides=[1, 2, 2, 1],
                                  W_init=tf.contrib.layers.xavier_initializer(), name='rgbdown1')
         rgbSample2 = Conv2dLayer(rgbSample1, shape=[6, 6, 3, 3], strides=[1, 2, 2, 1],
                                  W_init=tf.contrib.layers.xavier_initializer(), name='rgbdown2')
+
 
         net_image = inputs_level
         # 2X for each level
@@ -137,6 +132,7 @@ def HyTestNet(inputs, rgb_image, is_train=False, reuse=False):
         net_image3, net_feature3 = HyNetSingleLevel(net_image2, net_feature2, rgbSample, reuse=True)
 
     return net_image3, net_image2, net_image1
+
 
 if __name__ == '__main__':
     warnings.filterwarnings("ignore")
