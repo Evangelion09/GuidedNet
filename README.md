@@ -1,6 +1,8 @@
 # GuidedNet
 Code for the paper: "GuidedNet: A General CNN Fusion Framework via Highresolution Guidance for Hyperspectral Image Super-resolution", TCYB, 2023.
-![image](https://user-images.githubusercontent.com/49515620/219292070-2f1fc428-4688-48ce-8e75-e55cba9053ee.png)
+![image](https://user-images.githubusercontent.com/49515620/219292206-67afadb0-c6f9-4790-9841-0e8c00337f86.png)
+![image](https://user-images.githubusercontent.com/49515620/219292234-7c312b73-ed95-42cc-bcfb-bf1a7d03a7de.png)
+
 
 # Plateform.
 
